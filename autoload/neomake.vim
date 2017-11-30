@@ -306,14 +306,14 @@ function! s:MakeJob(make_id, options) abort
     "  - serialize_abort_on_error (default: 0)
     "  - exit_callback (string/function, default: 0)
     let jobinfo = extend(copy(s:jobinfo_base), extend({
-        \ 'id': job_id,
-        \ 'name': empty(get(a:options.maker, 'name', '')) ? 'neomake_'.job_id : a:options.maker.name,
-        \ 'maker': a:options.maker,
-        \ 'bufnr': a:options.bufnr,
-        \ 'file_mode': a:options.file_mode,
-        \ 'ft': a:options.ft,
-        \ 'output_stream': get(a:options, 'output_stream', get(a:options.maker, 'output_stream', 'both')),
-        \ }, a:options))
+                \ 'id': job_id,
+                \ 'name': empty(get(a:options.maker, 'name', '')) ? 'neomake_'.job_id : a:options.maker.name,
+                \ 'maker': a:options.maker,
+                \ 'bufnr': a:options.bufnr,
+                \ 'file_mode': a:options.file_mode,
+                \ 'ft': a:options.ft,
+                \ 'output_stream': get(a:options, 'output_stream', get(a:options.maker, 'output_stream', 'both')),
+                \ }, a:options))
 
     let maker = jobinfo.maker
 
@@ -359,10 +359,10 @@ function! s:MakeJob(make_id, options) abort
         if s:async
             if has('nvim')
                 let opts = {
-                    \ 'on_stdout': function('s:nvim_output_handler'),
-                    \ 'on_stderr': function('s:nvim_output_handler'),
-                    \ 'on_exit': function('s:nvim_exit_handler')
-                    \ }
+                            \ 'on_stdout': function('s:nvim_output_handler'),
+                            \ 'on_stderr': function('s:nvim_output_handler'),
+                            \ 'on_exit': function('s:nvim_exit_handler')
+                            \ }
                 if has_key(maker, 'nvim_job_opts')
                     call extend(opts, maker.nvim_job_opts)
                 endif
@@ -748,13 +748,13 @@ function! neomake#GetMaker(name_or_maker, ...) abort
         " Set defaults for command/job based makers.
         let defaults = copy(s:maker_defaults)
         call extend(defaults, {
-            \ 'exe': maker.name,
-            \ 'args': [],
-            \ })
+                    \ 'exe': maker.name,
+                    \ 'args': [],
+                    \ })
         if !has_key(maker, 'process_output')
             call extend(defaults, {
-                \ 'errorformat': &errorformat,
-                \ })
+                        \ 'errorformat': &errorformat,
+                        \ })
         endif
         for [key, default] in items(defaults)
             let maker[key] = neomake#utils#GetSetting(key, maker, default, ft, bufnr, 1)
@@ -1225,10 +1225,10 @@ function! s:AddExprCallback(jobinfo, prev_list) abort
             let changed_entries[index] = entry
             if debug
                 call neomake#utils#DebugMessage(printf(
-                  \ 'Modified list entry (postprocess): %s.',
-                  \ join(values(map(neomake#utils#diff_dict(before, entry)[0],
-                  \ "v:key.': '.string(v:val[0]).' => '.string(v:val[1])")))),
-                  \ a:jobinfo)
+                            \ 'Modified list entry (postprocess): %s.',
+                            \ join(values(map(neomake#utils#diff_dict(before, entry)[0],
+                            \ "v:key.': '.string(v:val[0]).' => '.string(v:val[1])")))),
+                            \ a:jobinfo)
 
             endif
         endif
@@ -1775,7 +1775,7 @@ function! s:ProcessEntries(jobinfo, entries, ...) abort
         " Track all errors by buffer and line
         let s:current_errors[maker_type][entry.bufnr] = get(s:current_errors[maker_type], entry.bufnr, {})
         let s:current_errors[maker_type][entry.bufnr][entry.lnum] = get(
-            \ s:current_errors[maker_type][entry.bufnr], entry.lnum, [])
+                    \ s:current_errors[maker_type][entry.bufnr], entry.lnum, [])
         call add(s:current_errors[maker_type][entry.bufnr][entry.lnum], entry)
 
         if g:neomake_place_signs
@@ -2125,7 +2125,7 @@ endfunction
 
 " @vimlint(EVL108, 1)
 if has('nvim-0.2.0')
-" @vimlint(EVL108, 0)
+    " @vimlint(EVL108, 0)
     function! s:nvim_output_handler(job_id, data, event_type) abort
         let jobinfo = get(s:jobs, get(s:map_job_ids, a:job_id, -1), {})
         if empty(jobinfo)
@@ -2232,8 +2232,8 @@ function! s:exit_handler(jobinfo, data) abort
                     \ extend(copy(jobinfo), maker), 0, jobinfo.ft, jobinfo.bufnr)
         if l:ExitCallback isnot# 0
             let callback_dict = { 'status': jobinfo.exit_code,
-                                \ 'name': maker.name,
-                                \ 'has_next': !empty(s:make_info[jobinfo.make_id].jobs_queue) }
+                        \ 'name': maker.name,
+                        \ 'has_next': !empty(s:make_info[jobinfo.make_id].jobs_queue) }
             try
                 if type(l:ExitCallback) == type('')
                     let l:ExitCallback = function(l:ExitCallback)
@@ -2444,9 +2444,16 @@ function! neomake#EchoCurrentError(...) abort
     call neomake#utils#WideMessage(message)
 endfunction
 
-function! neomake#CursorMoved() abort
-    call neomake#EchoCurrentError()
-endfunction
+if !empty(get(g:, 'neomake_cursormoved_func', ''))
+    " this func will be called with one argv ( the current error message)
+    function! neomake#CursorMoved() abort
+        call call(g:neomake_cursormoved_func, [neomake#GetCurrentErrorMsg()])
+    endfunction
+else
+    function! neomake#CursorMoved() abort
+        call neomake#EchoCurrentError()
+    endfunction
+endif
 
 function! s:cursormoved_delayed_cb(...) abort
     if getpos('.') == s:cursormoved_last_pos
@@ -2546,7 +2553,7 @@ function! neomake#DisplayInfo(...) abort
     if bang
         " NOTE: using 'redir @+>' directly is buggy in Neovim (job issues with xsel).
         redir => neomake_redir_info
-            silent call s:display_neomake_info()
+        silent call s:display_neomake_info()
         redir END
         try
             call setreg('+', neomake_redir_info, 'l')
