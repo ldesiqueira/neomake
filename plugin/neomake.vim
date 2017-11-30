@@ -84,7 +84,7 @@ function! s:setup_autocmds() abort
         if !exists('*nvim_buf_add_highlight')
             autocmd BufEnter * call neomake#highlights#ShowHighlights()
         endif
-        if get(g:, 'neomake_handle_cursor_move', 1)
+        if get(g:, 'neomake_handle_cursormoved', 1)
             if has('timers')
                 autocmd CursorMoved * call neomake#CursorMovedDelayed()
                 " Force-redraw display of current error after resizing Vim, which appears
